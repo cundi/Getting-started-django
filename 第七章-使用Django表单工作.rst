@@ -1,30 +1,49 @@
 chapter 7 Working with Django Forms
+
 使用Django表单工作
+
 We all know about HTML forms. This is a <form> tag that contains the <input> and
 <select> tags. The user can fill in or edit these items and return them to the server.
 This is the preferred way to store data provided by the client. Frameworks such as
 Django seized the HTML form to make it better.
+
 我们都知道HTML表单。这是一个包含<input>和<select>标签的的<form>标签。
 用户可以填充或者编辑这些项然后将它们送回服务器。
 这是一个由客户端提供的首选的办法。像Django这样的框架采用HTML表单从而使表单变得更友好。
+
 A Django form is inherited from the Form class object. It is an object in which we
 will set properties. These properties will be the fields in the form, and we will
 define their type.
+
 Django表单继承自Form类对象。它是我们将设置属性中的一个对象。这些属性将会是表单中的字段，
 然后我们定义它们的类型。
+
 In this chapter, we will learn how to do the following:
+
 在本章，我们将学习如何做到这些事情：
+
 •	 Create an HTML form
+
 创建一个HTML表单
+
 •	 Handle the data sent by a form
+
 通过发送一个表单来处理数据
+
 •	 Create a Django form
+
 创建一个Django表单
+
 •	 Validate and manipulate data sent from a Django form
+
 验证和操作发送自Django表单的数据
+
 •	 Create forms based on models
+
 创建基于模型的表单
+
 •	 Customize error messages and use widgets
+
 定制错误消息，使用部件
 
 The advantages of Django forms are as follows:
