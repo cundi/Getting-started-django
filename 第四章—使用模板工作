@@ -61,13 +61,24 @@ DATABASES = {
 }
 }
 The following is the description of the properties mentioned in the preceding code:
+下面是前面代码的属性提示的描述：
 •	 The ENGINE property specifies the type of database to be used.
+ENGINE属性指定将要使用的数据库的类型
 •	 The NAME property defines the path and final name of the SQLite database. We
 use a syntax using os.path.join to our code, and it is compatible with all
 operating systems. The file's database will be contained in the project directory.
+NAME属性定义路径和SQLite数据库的最终名称。我们用一个使用os.path.join的语法到代码，
+而且它兼容于所有的操作系统。文件的数据库将被包含于项目目录中。
 •	 The other properties are useful when we use a database server, but as we will
 use SQLite, we do not need to define them.
+当我们使用一个数据库服务器时，其他的属性也是很有用的，不过当我们使用了SQLite，就不需要
+定义它的属性。
+
+###################################################################################
+Django1.7无需使用South
+###################################################################################
 Migrations with South
+使用South迁移
 South is a very useful extension of Django. It facilitates the migration of the database
 when changing fields. It also keeps a history of the changes in the structure of
 the database.
@@ -77,6 +88,8 @@ Django 1.7 incorporates a migration system. You will not need to use South anymo
 to make the migration of a Django application. You can find more information about
 the migration systems integrated into Django 1.7 at https://docs.djangoproject.
 com/en/dev/topics/migrations/ .
+Django1.7包含了一个迁移系统。你在也不需要使用South操作一个Django应用的迁移。你可以在
+https://docs.djangoproject.com/en/dev/topics/migrations/找到关于集成到1.7中的迁移系统。
 Installing South
 To install South, we use the pip command. We have already used it to install Django.
 To do this, run the following command:
@@ -106,7 +119,9 @@ assign a value.
 commands in the correct order:
 manage.py schemamigration TasksManager –auto
 manage.py migrate TasksManager
+###################################################################################
 Django1.7版本用户已经不必再安装South进行迁移。
+###################################################################################
 
 Creating simple models
 创建简单的模型
