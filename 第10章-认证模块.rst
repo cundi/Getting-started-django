@@ -1,0 +1,428 @@
+   第10章
+The Authentication Module 
+认证模块
+The authentication module saves a lot of time in creating space for users. The following are the main advantages of this module: 
+认证模块在为用户创建空间中节省了很多时间。下面是这个模块的主要优势：
+The main actions related to users are simplified (connection, account activation, and so on)  
+关联到用户的主要行为都是简化了的（连接，账户激活，等等）
+Using this system ensures a certain level of security  
+使用这个系统保证了一个毫无疑问的安全等级
+Access restrictions to pages can be done very easily  
+限制到页面的访问可以非常轻松地实施
+It's such a useful module that we have already used it without noticing. Indeed, access to the administration module is performed by the authentication module. The user we created during the generation of our database was the first user of the site.  This chapter greatly alters the application we wrote earlier. At the end of this chapter, we will have:  
+它是一个非常有用的模块，我们已经用过它只是没有注意罢了。确实，到管理模块的访问是由认证模块执行的。我们在站点的第一个用户的数据库生成时就创建了用户。本章极大的改变了我们之前写的应用。在本章结尾，我们会学到：
+Modified our UserProfile model to make it compatible with the module  
+修改UseProfile模块使它兼容于模块
+Created a login page  
+创建一个登录页面
+Modified the addition of developer and supervisor pages  
+修改其他的developer和supervisor页面
+Added the restriction of access to connected users  
+对已连接用户添加访问限制
+
+
+How to use the authentication module  
+如何使用认证模块
+In this section, we will learn how to use the authentication module by making our application compatible with the module.  
+这一节中，我们将学习如何通过对模块的兼容来使用认真模块
+Configuring the Django application 
+配置Django应用
+There is normally nothing special to do for the administration module to work in our TasksManager application. Indeed, by default, the module is enabled and allows us to use the administration module. However, it is possible to work on a site where the web Django authentication module has been disabled. We will check whether the module is enabled. 
+一般地来说，我们并没有做些特别事情以使管理模块TasksManager应用起作用。确实，默认情况下，模块使启用的并允许我们使用管理模块。然而，它在一个web的Django管理模块关闭的地方也是可以工作的。我们会检查模块是否已启用。
+In the INSTALLED_APPS section of the settings.py file, we have to check the following line: 
+   'django.contrib.auth',
+
+在settings.py文件中的INSTALLED_APPS部分，我们必须检查下面的行：
+   'django.contrib.auth',
+
+Editing the UserProfile model 
+编辑用户账户模块
+The authentication module has its own User model. This is also the reason why we have created a UserProfile model and not just User. It is a model that already contains some fields, such as nickname and password. To use the administration module, you have to use the User model on the Python33/Lib/site-package/ django/contrib/auth/models.py file. 
+认证模块由自己的User模型。这也是为什么我们创建了一个UserProfile模型而不是User的原因。
+它是一个已经包含某些字段的模型，比如昵称和密码。要使用管理模块，你必须在文件Python33/Lib/site-package/ django/contrib/auth/models.py之上使用User模块。
+
+We will modify the UserProfile model in the models.py file that will become the following: 
+我们会在models.py文件中修改UserProfile模型，它会是下面这个样子：
+
+
+   class UserProfile(models.Model):
+     user_auth = models.OneToOneField(User, primary_key=True)
+     phone = models.CharField(max_length=20, verbose_name="Phone number",
+   null=True, default=None, blank=True)
+     born_date = models.DateField(verbose_name="Born date", null=True,
+   default=None, blank=True)
+     last_connexion = models.DateTimeField(verbose_name="Date of last
+   connexion", null=True, default=None, blank=True)
+   years_seniority = models.IntegerField(verbose_name="Seniority",
+   default=0)
+   def __str__(self):
+return self.user_auth.username We must also add the following line in models.py: 
+   from django.contrib.auth.models import User
+
+In this new model, we have: 
+在这个新模型中，我们做到了：
+Created a OneToOneField relationship with the user model we imported  
+使用导入的user模型我们创建了一个OneToOneField关系
+Deleted the fields that didn't exist in the user model  
+删除user模型中不存在的字段
+The OneToOne relation means that for each recorded UserProfile model, there will be a record of the User model. In doing all this, we deeply modify the database. Given these changes and because the password is stored as a hash, we will not perform the migration with South. 
+OneToOne关系意思是对于每个已经记录的UserProfile模型，都会有一个User模型的记录。通过所做的这一切，我们深度地修改了数据库。给出这些改变，是因为密码已hash存储了，我们不会使用South迁移。
+It is possible to keep all the data and do a migration with South, but we should develop a specific code to save the information of the UserProfile model to the User model. The code should also generate a hash for the password, but it would be long and it is not the subject of the book. To reset South, we must do the following: 
+使用South是可以让所有的数据都做到迁移的，不过我们应该开发一个指定的代码去保存所有的UserProfile模型到User模型的信息。这个代码也应该为密码生成一个hash，但是它会很长，而且它不是本书的主题。要重置South，我们必须做到以下事情：
+Delete the TasksManager/migrations folder and all the files contained in this folder  
+删除TasksManager/migrations所有的文件夹及其自身
+Delete the database.db file 
+删除database.db文件。
+
+To use the migration system, we have to use the following commands already used  in the chapter about models:   
+要使用迁移系统，我们不得不使用在关于模型章节已经使用过的命令：
+  manage.py schemamigration TasksManager --initial
+   manage.py syncdb –migrate
+
+ After the deletion of the database, we must remove the initial data in create_developer.py. We must also delete the URL developer_detail and the following line in index.html:   
+在数据库的删除之后，我们必须移除create_developer.py 中的所有初始化数据。我们也必须删除 developer_detail这个URL，以及index.html文件中行：
+
+<a href="{% url "developer_detail" "2" %}">Detail second developer
+   (The second user must be a developer)</a><br />
+
+
+ Adding a user 
+添加一个用户
+ The pages that allow you to add a developer and supervisor no longer work because they are not compatible with our recent changes. We will change these pages to integrate our style changes. The view contained in the create_supervisor.py file will contain the following code:   
+允许你添加一个developer和supervisor的页面不再起作用了，是因为它们没有适应我们最近的改变。我们会改变这些页面以继承我们自己的风格变化。在文件create_supervisor.py中的视图包含下列代码：
+
+   from django.shortcuts import render
+   from TasksManager.models import Supervisor
+   from django import forms
+   from django.http import HttpResponseRedirect
+   from django.core.urlresolvers import reverse
+    from django.contrib.auth.models import User
+
+   def page(request):
+      if request.POST:
+       form = Form_supervisor(request.POST)
+       if form.is_valid():
+ 
+         name           = form.cleaned_data['name']
+         login          = form.cleaned_data['login']
+         password       = form.cleaned_data['password']
+         specialisation = form.cleaned_data['specialisation']
+         email          = form.cleaned_data['email']
+         new_user = User.objects.create_user(username = login, email =
+   email, password=password)
+         # In this line, we create an instance of the User model with
+   the create_user() method. It is important to use this method because
+   it can store a hashcode of the password in database. In this way, the
+   password cannot be retrieved from the database. Django uses the PBKDF2
+   algorithm to generate the hash code password of the user.
+#在这一行，我们使用create_user()方法创建一个User模型的实例。使用这个方法是非常重要的，因为它能够存储一个数据中密码的hash代码。因此，密码不能够从数据库重新取回。Django使用PBKDF2算法生成用户的hash代码格式的密码。
+
+         new_user.is_active = True
+
+         # In this line, the is_active attribute defines whether the user
+   can connect or not. This attribute is false by default which allows
+   you to create a system of account verification by email, or other
+   system user validation.
+#在这一行中，is_active属性定义了用户是否可以连接。该属性默认值为false，它允许你通过email创建一个账户认证系统，或者其他的用户验证系统。
+
+         new_user.last_name=name
+
+         # In this line, we define the name of the new user. #这一行，我们定义了新用户的名字。
+
+         new_user.save()
+
+         # In this line, we register the new user in the database. #我们在数据中注册新用户。
+
+         new_supervisor = Supervisor(user_auth = new_user,
+   specialisation=specialisation)
+
+         # In this line, we create the new supervisor with the form data.
+   We do not forget to create the relationship with the User model by
+   setting the property user_auth with new_user instance.
+#这一行中，我们用表单数据创建新的supervisor。我们不要忘了通过使用new_user实例配置user_auth属性以使用User模型创建的关系。
+
+         new_supervisor.save()
+         return HttpResponseRedirect(reverse('public_empty'))
+       else:
+         return render(request, 'en/public/create_supervisor.html',
+   {'form' : form})
+     else:
+       form = Form_supervisor()
+     form = Form_supervisor()
+     return render(request, 'en/public/create_supervisor.html', {'form' :
+   form})
+
+
+   class Form_supervisor(forms.Form):
+     name = forms.CharField(label="Name", max_length=30)
+     login = forms.CharField(label = "Login")
+     email = forms.EmailField(label = "Email")
+     specialisation = forms.CharField(label = "Specialisation")
+     password = forms.CharField(label = "Password", widget = forms.
+   PasswordInput)
+     password_bis = forms.CharField(label = "Password", widget = forms.
+   PasswordInput)
+     def clean(self):
+       cleaned_data = super (Form_supervisor, self).clean()
+       password = self.cleaned_data.get('password')
+password_bis = self.cleaned_data.get('password_bis')
+if password and password_bis and password != password_bis:
+raise forms.ValidationError("Passwords are not identical.")
+       return self.cleaned_data
+
+The create_supervisor.html template remains the same, as we are using a Django form. 
+创建create_supervisor.htm模板剩下的是相同的，如同我们在使用一个Djang表单。
+You can change the page() method in the create_developer.py file to make it compatible with the authentication module (you can refer to downloadable Packt code files for further help): 
+你可以在文件create_developer.py中改变page()方法以使它适应认证模块（你可以参考可下载的Packt代码文件获取深入的帮助）：
+   def page(request):
+     if request.POST:
+       form = Form_inscription(request.POST)
+       if form.is_valid():
+         name          = form.cleaned_data['name']
+         login         = form.cleaned_data['login']
+         password      = form.cleaned_data['password']
+         supervisor    = form.cleaned_data['supervisor']
+         new_user = User.objects.create_user(username = login,
+   password=password)
+         new_user.is_active = True
+         new_user.last_name=name
+         new_user.save()
+         new_developer = Developer(user_auth = new_user,
+   supervisor=supervisor)
+         new_developer.save()
+         return HttpResponse("Developer added")
+       else:
+         return render(request, 'en/public/create_developer.html',
+   {'form' : form})
+     else:
+       form = Form_inscription()
+       return render(request, 'en/public/create_developer.html', {'form'
+: form}) 
+We can also modify developer_list.html with the following content: 
+我们也可以用下面的内容修改developer_list.html：
+
+password_bis = self.cleaned_data.get('password_bis')
+if password and password_bis and password != password_bis:
+{% extends "base.html" %}
+{% block title_html %}
+    Developer list
+{% endblock %}
+{% block h1 %}
+    Developer list
+{% endblock %}
+   {% block article_content %}
+<table> <tr> 
+               <td>Name</td>
+               <td>Login</td>
+               <td>Supervisor</td>
+           </tr>
+           {% for dev in object_list %}
+               <tr>
+                   <!-- The following line displays the __str__ method of
+   the model. In this case it will display the username of the developer
+下面的行显示模型的__str__方法。这个例子中它会显示developer的用户名
+   -->
+<td><a href="">{{ dev }}</a></td>
+<!-- The following line displays the last_name of the developer -->
+#下面的行显示developer的last_name
+
+<td>{{ dev.user_auth.last_name }}</td>
+                   <!-- The following line displays the __str__ method of
+   the Supervisor model. In this case it will display the username of the
+   supervisor
+下面的行显示了Supervisor模型的__str__方法。这个例子中它会显示supervisor的用户名 -->
+                   <td>{{ dev.supervisor }}</td>
+               </tr>
+           {% endfor %}
+       </table>
+   {% endblock %}
+
+
+Login and logout pages 
+登录和登出页面
+Now that you can create users, you must create a login page to allow the user to authenticate. We must add the following URL in the urls.py file: 
+现在你可以创建用户，你必须创建一个登录页面以允许用户通过认证。
+我们必须在urls.py文件中添加下列URL：
+
+   url(r'^connection$', 'TasksManager.views.connection.page',
+   name="public_connection"),
+You must then create the connection.py view with the following code: 
+   from django.shortcuts import render
+   from django import forms
+   from django.contrib.auth import authenticate, login
+
+   # This line allows you to import the necessary functions of the
+   authentication module.
+#这一行允许你导入必要的认证模块函数
+
+
+
+   def page(request):
+     if request.POST:
+
+     # This line is used to check if the Form_connection form has been
+   posted. If mailed, the form will be treated, otherwise it will be
+   displayed to the user.
+#这一行用户检查Form_connection表单是否已经送出。如果已经投递，表单会被处理，否则表单会显示给用户。
+
+       form = Form_connection(request.POST)
+   if form.is_valid():
+         username = form.cleaned_data["username"]
+         password = form.cleaned_data["password"]
+         user = authenticate(username=username, password=password)
+
+         # This line verifies that the username exists and the password
+   is correct.
+#这一行验证用户名的存在以及密码是否正确。
+
+         if user:
+
+         # In this line, the authenticate function returns None if
+   authentication has failed, otherwise it returns an object that
+   validates the condition.
+#这一行中，如果认证失败则认证函数返回None，否则该函数返回一个带有验证条件的对象。
+
+           login(request, user)
+# In this line, the login() function allows the user to connect. 
+#这一行中，login()函数允许用户去连接。
+       else:
+         return render(request, 'en/public/connection.html', {'form' :
+form}) else: 
+       form = Form_connection()
+     return render(request, 'en/public/connection.html', {'form' : form})
+
+
+   class Form_connection(forms.Form):
+     username = forms.CharField(label="Login")
+     password = forms.CharField(label="Password", widget=forms.
+   PasswordInput)
+     def clean(self):
+       cleaned_data = super(Form_connection, self).clean()
+       username = self.cleaned_data.get('username')
+       password = self.cleaned_data.get('password')
+       if not authenticate(username=username, password=password):
+         raise forms.ValidationError("Wrong login or password")
+       return self.cleaned_data
+
+
+
+You must then create the connection.html template with the following code: 
+然后，你必须用下列代码创建connection.html模板：
+   {% extends "base.html" %}
+   {% block article_content %}
+     {% if user.is_authenticated %}
+     <-- This line checks if the user is connected.-->
+#这行检查用户是否已连接。
+       <h1>You are connected.</h1>
+       <p>
+         Your email : {{ user.email }}
+         <-- In this line, if the user is connected, this line will
+   display his/her e-mail address.-->
+#这一行中，如果用户已连接，此行会显示用户的电邮地址。
+       </p>
+     {% else %}
+     <!-- In this line, if the user is not connected, we display the login form.-->
+#这一行中，如果用户已连接，我们显示登录表单
+<h1>Connexion</h1>
+       <form method="post" action="{{ public_connection }}">
+         {% csrf_token %}
+         <table>
+           {{ form.as_table }}
+         </table>
+         <input type="submit" class="button" value="Connection" />
+       </form>
+     {% endif %}
+   {% endblock %}
+
+When the user logs in, Django will save his/her data connection in session variables. This example has allowed us to verify that the audit login and password was transparent to the user. Indeed, the authenticate() and login() methods allow the developer to save a lot of time. Django also provides convenient shortcuts for the developer such as the user.is_authenticated attribute that checks if the user is logged in. Users prefer when a logout link is present on the website, especially when connecting from a public computer. We will now create the logout page. 
+当用户登录时，Django会在session变量中保存用户的数据。这例子允许我们验证到用户审计登录和密码是透明的。确实，authenticate()和login()方法让开发者节省了大量的时间。Django也为开发者提供了方便的快捷方式，比如user.is_authenticated属性检查用户是否已登录。当一个登出链接出现在网站，尤其是一个来自公共电脑的连接，更倾向于选择用户。我们现在会创建登出页面。
+First, we need to create the logout.py file with the following code: 
+首先，我们需要创建文用下列代码创建logout.py文件：
+   
+
+
+
+from django.shortcuts import render
+   from django.contrib.auth import logout
+   def page(request):
+       logout(request)
+       return render(request, 'en/public/logout.html')
+
+In the previous code, we imported the logout() function of the authentication module and used it with the request object. This function will remove the user identifier of the request object, and delete flushes their session data. 
+前面的代码中，我们导入了认证模块的logout()函数，并将它与request对象一起使用。这个函数会移除request对象的用户标识符，删除刷新它们的session数据。
+When the user logs out, he/she needs to know that the site was actually disconnected. Let's create the following template in the logout.html file: 
+当用用户登出时，用户需要知道站点是否真正地断开连接。让我们在logout.html文件中创建下列模板：
+   {% extends "base.html" %}
+   {% block article_content %}
+     <h1>You are not connected.</h1>
+   {% endblock %}
+
+
+
+Restricting access to the connected members 
+对已连接成员进行限制访问
+When developers implement an authentication system, it's usually to limit access to anonymous users. In this section, we'll see two ways to control access to our web pages. 
+当开发者实施一个认证系统时，通常要限制匿名用户的访问。在本节，我们会看到两种到web页面的访问控制方法。
+Restricting access to views 
+到视图的限制访问
+The authentication module provides simple ways to prevent anonymous users from accessing some pages. Indeed, there is a very convenient decorator to restrict access to a view. This decorator is called login_required. 
+认证模块提供了简单的方法阻止来自访问某些页面的匿名用户。确实，有一个非常方便的装饰器到一个视图的访问。这个装饰器称做login_required。
+In the example that follows, we will use the designer to limit access to the page() view from the create_developer module in the following manner: 
+在以下例子中，通过下列方式我们会使用设计于限制到来自create_developer模块的page()视图的访问：
+
+First, we must import the decorator with the following line:      
+首先，我们必须用下面的行导入装饰器：
+   from django.contrib.auth.decorators import login_required
+ 
+Then, we will add the decorator just before the declaration of the view:  
+然后，我们就在视图的声明之前添加装饰器：
+       @login_required
+       def page(request): # This line already exists. Do not copy it.#该行已存在，不用复制。
+ 
+With the addition of these two lines, the page that lets you add a developer is only available to the logged-in users. If you try to access the page without being connected, you will realize that it is not very practical because the obtained page is a 404 error. To improve this, simply tell Django what the connection URL is by adding the following line in the settings.py file:     
+这两行之外，页面让你添加一个develolper只对已登录用户可用。如果你没有建立连接而尝试访问页面，你就会意识到它很不实用，因为获取的页面是一个404错误。要改进它，在setting.py文件中添加下面的行，简单地告诉Django所要连接的URL即可：
+    LOGIN_URL = 'public_connection'
+ 
+With this line, if the user tries to access a protected page, he/she will be redirected to the login page. You may have noticed that if you're not logged in and you click the Create a developer link, the URL contains a parameter named next. The following is the screen capture of the URL:   
+对于这一行，如果用户试着访问一个被保护的页面，用户会被重定向到登录页面。你或许注意到如果你没有登录，然后你去点击链接Create a developer，URL包含一个名称为next的参数。下面是这个URL的屏幕截图：
+This parameter contains the URL that the user tried to consult. The authentication module redirects the user to the page when he/she connects. To do this, we will modify the connection.py file we created. We add the line that imports the render() function to import the redirect() function: 
+from django.shortcuts import render, redirect  
+这个参数包含用户试图去查阅的URL。当用户连接时认证模块重定向用户到这个页面。为此，我们会修改之前创建的connection.py文件。我们添加导入render()函数、导入redirect()函数的行：from django.shortcuts import render, redirect  
+
+ 
+To redirect the user after they log in, we must add two lines after the line that contains the code login (request, user). There are two lines to be added: 
+要在用户登录之后重定向，我们必须在包含login（request， user）代码的行之后添加两行。有两行会被添加：
+       if request.GET.get('next') is not None:
+         return redirect(request.GET['next'])
+
+This system is very useful when the user session has expired and he/she wants to see a specific page. 
+这个系统在用户会话过期而用户又想见到一个指定的页面时会非常有用的。
+
+Restricting access to URLs 
+限制到URL的访问
+The system that we have seen does not simply limit access to pages generated by CBVs. For this, we will use the same decorator, but this time in the urls.py file. 
+我们见过的系统没有简单地限制到由CBV生成的页面的访问。因此，除了这次在urls.py文件中我们会使用相同的装饰器。
+We will add the following line to import the decorator: 
+我们会添加下面的行导入装饰器：
+from django.contrib.auth.decorators import login_required 
+We need to change the line that corresponds to the URL named create_project: 
+我们需要改变对应到名称为create_projectURL的行：
+   url (r'^create_project$', login_required(CreateView.as_
+   view(model=Project, template_name="en/public/create_project.html",
+   success_url = 'index')), name="create_project"),
+
+The use of the login_required decorator is very simple and allows the developer to not waste too much time. 
+login_required装饰器的使用是很简单的，它让开发者不需要浪费太多的时间。
+
+
+
+
+
+
+
+Summary 
+总结
+In this chapter, we modified our application to make it compatible with the authentication module. We created pages that allow the user to log in and log out. We then learned how to restrict access to some pages for the logged in users. 
+在这一章，我们修改应用以使它适应认证模块。我们创建允许用登录和登出的页面。然后我们学习如何对已登录的用户限制到某些页面的访问。
+In the next chapter, we will improve the usability of the application with the addition of AJAX requests. We will learn the basics of jQuery and then learn how to use it to make an asynchronous request to the server. Also, we will learn how to handle the response from the server. 
+在下一章，我们会使用额外的AJAX请求改进应用的可用性。我们会学习jQuery的基础，然后学习如何使用它产生一个到服务器的异步请求。我们也将学习如何处理来自服务器的响应。
